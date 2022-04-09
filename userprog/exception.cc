@@ -25,6 +25,45 @@
 #include "main.h"
 #include "syscall.h"
 #include "ksyscall.h"
+
+// return a number char
+char itoa(int num) {
+    char c;
+    switch(num) {
+    case 0:
+        c = '0';
+        break;
+    case 1:
+        c = '1';
+        break;
+    case 2:
+        c = '2';
+        break;
+    case 3:
+        c = '3';
+        break;
+    case 4:
+        c = '4';
+        break;
+    case 5:
+        c = '5';
+        break;
+    case 6:
+        c = '6';
+        break;
+    case 7:
+        c = '7';
+        break;
+    case 8:
+        c = '8';
+        break;
+    case 9:
+        c = '9';
+        break;
+    }
+    return c;
+}
+
 //----------------------------------------------------------------------
 // ExceptionHandler
 // 	Entry point into the Nachos kernel.  Called when a user program
@@ -115,11 +154,16 @@ ExceptionHandler(ExceptionType which)
 		case SC_PrintInt:
 			val = kernel->machine->ReadRegister(4);
 			{
-			cout << val << endl;
+				while(val / 10 > 0) {
+					kernel->synchConsoleOut->PutChar(itoa(val % 10));
+					val = val / 10;
+				}
+				kernel->synchConsoleOut->PutChar(itoa(val % 10));
 			}
 			kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
 			kernel->machine->WriteRegister(PCReg, kernel->machine->ReadRegister(PCReg) + 4);
 			kernel->machine->WriteRegister(NextPCReg, kernel->machine->ReadRegister(PCReg)+4);
+			return;
 			ASSERTNOTREACHED();
 			break;
 		case SC_Exit:
