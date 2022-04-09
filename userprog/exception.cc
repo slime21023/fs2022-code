@@ -94,6 +94,7 @@ void ExceptionHandler(ExceptionType which)
 	int type = kernel->machine->ReadRegister(2);
 	int val;
 	int status, exit, threadID, programID;
+	OpenFile* file;
 	DEBUG(dbgSys, "Received Exception " << which << " type: " << type << "\n");
 	switch (which)
 	{
@@ -135,7 +136,7 @@ void ExceptionHandler(ExceptionType which)
 			{
 				char *filename = &(kernel->machine->mainMemory[val]);
 				//cout << filename << endl;
-				status = kernel->fileSystem->Open(filename);
+				status = OpenForReadWrite(filename, false);
 				kernel->machine->WriteRegister(2, (int)status);
 			}
 			kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
@@ -149,7 +150,7 @@ void ExceptionHandler(ExceptionType which)
 			val = kernel->machine->ReadRegister(4);
 			char *buffer = &(kernel->machine->mainMemory[val]);
 			int size = (int)kernel->machine->ReadRegister(5);
-			OpenFile file((int)kernel->machine->ReadRegister(6));
+			file = new OpenFile((int)kernel->machine->ReadRegister(6));
 			int count = file->Read(buffer, size);
 			status = (count == size) ? size : -1;
 			kernel->machine->WriteRegister(2, (int)status);
@@ -165,8 +166,8 @@ void ExceptionHandler(ExceptionType which)
 			val = kernel->machine->ReadRegister(4);
 			char *buffer = &(kernel->machine->mainMemory[val]);
 			int size = (int)kernel->machine->ReadRegister(5);
-			OpenFile file((int)kernel->machine->ReadRegister(6));
-			int count = file->Write(buffer, size);
+			file = new OpenFile((int)kernel->machine->ReadRegister(6));
+			int count = file->WriteAt(buffer, size, file->Length());
 			status = (count == size) ? size : -1;
 			kernel->machine->WriteRegister(2, (int)status);
 		}
@@ -179,8 +180,8 @@ void ExceptionHandler(ExceptionType which)
 		case SC_Close:
 			val = kernel->machine->ReadRegister(4);
 			{
-				status = (Close(val) == 1) ? 1 : 0;
-				kernel->machine->WriteRegister(2, (int)status);
+			status = (Close(val) == 0) ? 1 : 0;
+			kernel->machine->WriteRegister(2, (int)status);
 			}
 			kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
 			kernel->machine->WriteRegister(PCReg, kernel->machine->ReadRegister(PCReg) + 4);
