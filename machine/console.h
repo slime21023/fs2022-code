@@ -76,6 +76,7 @@ class ConsoleOutput : public CallBackObj {
     void PutChar(char ch);	// Write "ch" to the console display, 
 				// and return immediately.  "callWhenDone" 
 				// will called when the I/O completes. 
+    void PutCharBuf(char *ch, int length);
     void CallBack();		// Invoked when next character can be put
 				// out to the display.
 

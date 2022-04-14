@@ -172,3 +172,13 @@ ConsoleOutput::PutChar(char ch)
     kernel->interrupt->Schedule(this, ConsoleTime, ConsoleWriteInt);
 }
 
+// ConsoleOutput::PutCharBuf()
+// Write the Char buffer to console
+void
+ConsoleOutput::PutCharBuf(char *ch, int length)
+{
+    ASSERT(putBusy == FALSE);
+    WriteFile(writeFileNo, &ch, sizeof(char)*length);
+    putBusy = TRUE;
+    kernel->interrupt->Schedule(this, ConsoleTime, ConsoleWriteInt);
+}
