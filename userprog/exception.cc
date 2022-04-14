@@ -37,51 +37,15 @@ int intLength(int num)
 	return len;
 }
 
-// return a number char buffer
-char itoa(int num)
+char setInt2CharBuf(char* buf, int length, int num)
 {
-	char c[16];
-	int curNum = num;
-	int curLength = 0;
-	while (curNum / 10 > 0) {
-		curNum /= 10;
-		curLength += 1;
+	int cur;
+	int temp = num;
+	for(cur = 0; cur < length; cur++) {
+		buf[cur] = 48 + (temp % 10);
+		temp /= 10;
 	}
-
-	switch (num)
-	{
-	case 0:
-		c = '0';
-		break;
-	case 1:
-		c = '1';
-		break;
-	case 2:
-		c = '2';
-		break;
-	case 3:
-		c = '3';
-		break;
-	case 4:
-		c = '4';
-		break;
-	case 5:
-		c = '5';
-		break;
-	case 6:
-		c = '6';
-		break;
-	case 7:
-		c = '7';
-		break;
-	case 8:
-		c = '8';
-		break;
-	case 9:
-		c = '9';
-		break;
-	}
-	return c;
+	buf[length] = '\n';
 }
 
 //----------------------------------------------------------------------
@@ -153,7 +117,7 @@ void ExceptionHandler(ExceptionType which)
 			{
 				char *filename = &(kernel->machine->mainMemory[val]);
 				//cout << filename << endl;
-				status = SysOpen(filename);
+				status = OpenForReadWrite(filename, false);
 				kernel->machine->WriteRegister(2, (int)status);
 			}
 			kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
@@ -167,8 +131,9 @@ void ExceptionHandler(ExceptionType which)
 				val = kernel->machine->ReadRegister(4);
 				char *buffer = &(kernel->machine->mainMemory[val]);
 				int size = (int)kernel->machine->ReadRegister(5);
-				int fid = (int)kernel->machine->ReadRegister(6);
-				status = SysRead(buffer, size, fid);
+				file = new OpenFile((int)kernel->machine->ReadRegister(6));
+				int count = file->Read(buffer, size);
+				status = (count == size) ? size : -1;
 				kernel->machine->WriteRegister(2, (int)status);
 			}
 			kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
@@ -182,8 +147,9 @@ void ExceptionHandler(ExceptionType which)
 				val = kernel->machine->ReadRegister(4);
 				char *buffer = &(kernel->machine->mainMemory[val]);
 				int size = (int)kernel->machine->ReadRegister(5);
-				int fid = (int)kernel->machine->ReadRegister(6);
-				status = SysWrite(buffer, size, fid);
+				file = new OpenFile((int)kernel->machine->ReadRegister(6));
+				int count = file->WriteAt(buffer, size, file->Length());
+				status = (count == size) ? size : -1;
 				kernel->machine->WriteRegister(2, (int)status);
 			}
 			kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
@@ -195,7 +161,7 @@ void ExceptionHandler(ExceptionType which)
 		case SC_Close:
 			val = kernel->machine->ReadRegister(4);
 			{
-				status = SysClose(fid);
+				status = (Close(val) == 0) ? 1 : 0;
 				kernel->machine->WriteRegister(2, (int)status);
 			}
 			kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
@@ -231,14 +197,10 @@ void ExceptionHandler(ExceptionType which)
 		case SC_PrintInt:
 			val = kernel->machine->ReadRegister(4);
 			{
-				while (val / 10 > 0)
-				{
-					kernel->synchConsoleOut->PutChar(itoa(val % 10));
-					val = val / 10;
-					kernel->synchConsoleOut->PutChar('\n');
-				}
-				kernel->synchConsoleOut->PutChar(itoa(val % 10));
-				kernel->synchConsoleOut->PutChar('\n');
+				char buf[128];
+				int len = intLength(val);
+				setInt2CharBuf(&buf, len, val);
+				kernel->synchConsoleOut->PutCharBuf(&buf, len);
 			}
 			kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
 			kernel->machine->WriteRegister(PCReg, kernel->machine->ReadRegister(PCReg) + 4);
