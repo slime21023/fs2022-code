@@ -37,15 +37,15 @@ int intLength(int num)
 	return len;
 }
 
-char setInt2CharBuf(char* buf, int length, int num)
+void setInt2CharBuf(char* buf, int length, int num)
 {
 	int cur;
 	int temp = num;
-	for(cur = 0; cur < length; cur++) {
+	for(cur = length-2; cur >= 0; cur--) {
 		buf[cur] = 48 + (temp % 10);
 		temp /= 10;
 	}
-	buf[length] = '\n';
+	buf[length-1] = '\n';
 }
 
 //----------------------------------------------------------------------
@@ -76,6 +76,7 @@ void ExceptionHandler(ExceptionType which)
 	int type = kernel->machine->ReadRegister(2);
 	int val;
 	int status, exit, threadID, programID;
+	OpenFile* file;
 	DEBUG(dbgSys, "Received Exception " << which << " type: " << type << "\n");
 	switch (which)
 	{
@@ -197,10 +198,10 @@ void ExceptionHandler(ExceptionType which)
 		case SC_PrintInt:
 			val = kernel->machine->ReadRegister(4);
 			{
-				char buf[128];
-				int len = intLength(val);
-				setInt2CharBuf(&buf, len, val);
-				kernel->synchConsoleOut->PutCharBuf(&buf, len);
+				int len = intLength(val) + 1;
+				char buf[len];
+				setInt2CharBuf(buf, len, val);
+				kernel->synchConsoleOut->PutCharBuf(buf, len);
 			}
 			kernel->machine->WriteRegister(PrevPCReg, kernel->machine->ReadRegister(PCReg));
 			kernel->machine->WriteRegister(PCReg, kernel->machine->ReadRegister(PCReg) + 4);

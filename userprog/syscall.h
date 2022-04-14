@@ -57,7 +57,7 @@ void Halt();
 /*
  * Output the number and a line separator to the console.
  */ 
-void PrintInt(int number)​;
+void PrintInt(int number);
 
 /*
  * Add the two operants and return the result
