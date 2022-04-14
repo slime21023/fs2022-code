@@ -106,6 +106,17 @@ SynchConsoleOutput::PutChar(char ch)
     lock->Release();
 }
 
+// SynchConsoleOutput::PutCharBuf
+// Write char buffer to console
+void
+SynchConsoleOutput::PutCharBuf(char *ch, int length)
+{
+    lock->Acquire();
+    consoleOutput->PutCharBuf(ch, length);
+    waitFor->P();
+    lock->Release();
+}
+
 //----------------------------------------------------------------------
 // SynchConsoleOutput::CallBack
 //      Interrupt handler called when it's safe to send the next 
